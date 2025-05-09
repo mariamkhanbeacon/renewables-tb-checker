@@ -1,6 +1,23 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import requests
+
+def find_nearest_urgent_care(location):
+    try:
+        search_query = f"urgent care near {location}"
+        response = requests.get(f"https://nominatim.openstreetmap.org/search?q={search_query}&format=json")
+        if response.status_code == 200:
+            results = response.json()
+            if results:
+                return results[0]['display_name']
+            else:
+                return "No urgent care found."
+        else:
+            return "Search failed."
+    except Exception as e:
+        return f"Error finding urgent care: {str(e)}"
+
 
 def main():
     st.title("TB Test Expiry Checker")
@@ -94,7 +111,7 @@ def main():
         
         st.dataframe(result_df.reset_index(drop=True))
 
-        # Display list of employee names, addresses, and location descriptions with expiring TB tests
+        # Display list of employee names, addresses, locations, and urgent care options
         st.write("Employees with expiring TB tests:")
         for _, row in result_df.iterrows():
             details = f"- {row['Name']}"
@@ -102,6 +119,8 @@ def main():
                 details += f" (Address: {row['Address']})"
             if 'Location Description' in row:
                 details += f" [Location: {row['Location Description']}]"
+                urgent_care = find_nearest_urgent_care(row['Location Description'])
+                details += f" - Nearest Urgent Care: {urgent_care}"
             st.write(details)
 
 if __name__ == "__main__":
