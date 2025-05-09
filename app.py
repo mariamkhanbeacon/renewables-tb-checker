@@ -86,5 +86,11 @@ def main():
         
         st.dataframe(result_df.reset_index(drop=True))
 
+        # Display list of employee names with expiring TB tests
+        expiring_names = result_df['Name'].tolist()
+        st.write("Employees with expiring TB tests:")
+        for name in expiring_names:
+            st.write("- " + name)
+
 if __name__ == "__main__":
     main()
