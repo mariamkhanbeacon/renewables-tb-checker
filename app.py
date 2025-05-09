@@ -28,11 +28,6 @@ def main():
         st.error("Employee name column not found. Expected 'Legal Name' or similar.")
         return
     
-    # Check for address column
-    if 'Address' not in df.columns:
-        st.error("Missing required column: 'Address'.")
-        return
-    
     # Check required columns
     if 'Position Status' not in df.columns:
         st.error("Missing required column: 'Position Status'.")
@@ -83,18 +78,31 @@ def main():
         st.info("No active employees have TB tests expiring by 2025-06-30.")
     else:
         st.success(f"Found {len(df_expire)} active employees with TB tests expiring by 2025-06-30.")
-        result_df = df_expire[[name_col, 'Address', 'Most Recent TB Test Date', 'Expiry Date']].copy()
+        # Check if the Address and Location Description columns exist
+        columns_to_display = [name_col, 'Most Recent TB Test Date', 'Expiry Date']
+        if 'Address' in df_expire.columns:
+            columns_to_display.insert(1, 'Address')
+        if 'Location Description' in df_expire.columns:
+            columns_to_display.insert(2, 'Location Description')
+        
+        result_df = df_expire[columns_to_display].copy()
         result_df.rename(columns={name_col: 'Name', 'Most Recent TB Test Date': 'TB Test Date'}, inplace=True)
+        
         # Format dates for display
         result_df['TB Test Date'] = result_df['TB Test Date'].dt.date
         result_df['Expiry Date'] = result_df['Expiry Date'].dt.date
         
         st.dataframe(result_df.reset_index(drop=True))
 
-        # Display list of employee names and addresses with expiring TB tests
+        # Display list of employee names, addresses, and location descriptions with expiring TB tests
         st.write("Employees with expiring TB tests:")
         for _, row in result_df.iterrows():
-            st.write(f"- {row['Name']} (Address: {row['Address']})")
+            details = f"- {row['Name']}"
+            if 'Address' in row:
+                details += f" (Address: {row['Address']})"
+            if 'Location Description' in row:
+                details += f" [Location: {row['Location Description']}]"
+            st.write(details)
 
 if __name__ == "__main__":
     main()
